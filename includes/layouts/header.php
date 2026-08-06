@@ -21,6 +21,7 @@ $usuario = $_SESSION['usuario'];
 
     <link rel="stylesheet" href="/assets/css/global.css">
     <link rel="stylesheet" href="/assets/css/dashboard.css">
+    <link rel="stylesheet" href="/assets/css/cacambas.css">
 </head>
 
 <body>

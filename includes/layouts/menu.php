@@ -13,12 +13,16 @@
             Equipamentos
         </a>
 
-        <a href="/views/descartes/index.php">
-            Descartes
+        <a href="/cacambas.php">
+            Caçamba atual
         </a>
 
         <a href="/views/relatorios/index.php">
             Relatórios
+        </a>
+
+        <a href="/historico-cacambas.php">
+            Histórico
         </a>
 
         <?php if (($usuario['tipo'] ?? '') === 'admin'): ?>
