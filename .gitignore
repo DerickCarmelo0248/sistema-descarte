@@ -1,0 +1,7 @@
+uploads/*
+!uploads/documentos/.gitkeep
+!uploads/fotos/.gitkeep
+
+config/config.local.php
+
+.vscode/
