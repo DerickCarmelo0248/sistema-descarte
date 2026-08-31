@@ -89,6 +89,18 @@
                 >
                     Limpar
                 </a>
+
+                <a
+                    href="/exportar-relatorio.php?<?= http_build_query([
+                        'data_inicio' => $dataInicio,
+                        'data_fim' => $dataFim,
+                        'cacamba' => $cacambaNumero
+                    ]) ?>"
+                    class="botao"
+                >
+                    Exportar CSV
+                </a>
+
             </div>
 
         </div>
