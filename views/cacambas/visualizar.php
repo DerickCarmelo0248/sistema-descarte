@@ -10,6 +10,7 @@
     <div class="painel-header">
 
         <div>
+
             <h2>
                 Caçamba
                 <?= str_pad(
@@ -23,6 +24,7 @@
             <p>
                 Lote finalizado e disponível somente para consulta.
             </p>
+
         </div>
 
         <a
@@ -34,56 +36,89 @@
 
     </div>
 
+
     <div class="detalhes-cacamba">
 
         <p>
-            <strong>Data do descarte:</strong>
+
+            <strong>
+                Data do descarte:
+            </strong>
+
             <?= date(
                 'd/m/Y',
                 strtotime($cacamba['data_descarte'])
             ) ?>
+
         </p>
 
+
         <p>
-            <strong>Finalizada por:</strong>
+
+            <strong>
+                Finalizada por:
+            </strong>
+
             <?= htmlspecialchars(
-                $cacamba['finalizada_por_nome'] ?? 'Não informado'
+                $cacamba['finalizada_por_nome']
+                ?? 'Não informado'
             ) ?>
+
         </p>
 
+
         <p>
-            <strong>Laudo:</strong>
+
+            <strong>
+                Laudo:
+            </strong>
+
             <?= htmlspecialchars(
-                $cacamba['numero_laudo'] ?: '-'
+                $cacamba['numero_laudo']
+                ?: '-'
             ) ?>
+
         </p>
 
+
         <p>
-            <strong>Observações:</strong>
+
+            <strong>
+                Observações:
+            </strong>
+
             <?= nl2br(
                 htmlspecialchars(
-                    $cacamba['observacoes'] ?: '-'
+                    $cacamba['observacoes']
+                    ?: '-'
                 )
             ) ?>
+
         </p>
 
     </div>
 
 </section>
 
+
 <section class="painel">
 
     <div class="painel-header">
 
         <div>
-            <h2>Equipamentos descartados</h2>
+
+            <h2>
+                Equipamentos descartados
+            </h2>
 
             <p>
                 <?= count($itens) ?> item(ns) neste lote
             </p>
+
         </div>
 
     </div>
+
 
     <?php if ($itens): ?>
 
@@ -92,12 +127,15 @@
             <table class="tabela">
 
                 <thead>
+
                     <tr>
                         <th>Patrimônio</th>
+                        <th>Tipo</th>
                         <th>Descrição</th>
                         <th>Adicionado por</th>
                         <th>Data de adição</th>
                     </tr>
+
                 </thead>
 
                 <tbody>
@@ -107,14 +145,26 @@
                         <tr>
 
                             <td>
+
                                 <strong>
-                                    <?= htmlspecialchars($item['patrimonio']) ?>
+                                    <?= htmlspecialchars(
+                                        $item['patrimonio']
+                                    ) ?>
                                 </strong>
+
                             </td>
 
                             <td>
                                 <?= htmlspecialchars(
-                                    $item['descricao'] ?: '-'
+                                    $item['tipo']
+                                    ?: 'Não informado'
+                                ) ?>
+                            </td>
+
+                            <td>
+                                <?= htmlspecialchars(
+                                    $item['descricao']
+                                    ?: '-'
                                 ) ?>
                             </td>
 

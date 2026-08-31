@@ -1,158 +1,289 @@
 <?php
 
-$numeroFormatado = str_pad(
-    (string) $cacamba['numero'],
-    3,
-    '0',
-    STR_PAD_LEFT
-);
+/** @var array $cacamba */
+/** @var array $itens */
+/** @var array|null $mensagem */
+
 ?>
 
 <?php if ($mensagem): ?>
+
     <div class="alerta alerta-<?= htmlspecialchars($mensagem['tipo']) ?>">
         <?= htmlspecialchars($mensagem['texto']) ?>
     </div>
+
 <?php endif; ?>
 
-<section class="cabecalho-cacamba">
 
-    <div>
-        <span class="rotulo">Lote atual</span>
+<section class="painel">
 
-        <h2>Caçamba <?= $numeroFormatado ?></h2>
+    <div class="cabecalho-cacamba">
 
-        <p>
-            Aberta em
-            <?= date(
-                'd/m/Y H:i',
-                strtotime($cacamba['data_abertura'])
-            ) ?>
-        </p>
-    </div>
+        <div>
 
-    <div class="resumo-cacamba">
-        <strong><?= count($itens) ?></strong>
-        <span>itens registrados</span>
+            <span class="card-label">
+                Lote atual
+            </span>
+
+            <h2>
+                Caçamba <?= str_pad(
+                    (string) $cacamba['numero'],
+                    3,
+                    '0',
+                    STR_PAD_LEFT
+                ) ?>
+            </h2>
+
+            <p>
+                Aberta em
+                <?= date(
+                    'd/m/Y H:i',
+                    strtotime($cacamba['data_abertura'])
+                ) ?>
+            </p>
+
+        </div>
+
+        <div>
+
+            <strong>
+                <?= count($itens) ?>
+            </strong>
+
+            <span>
+                item(ns)
+            </span>
+
+        </div>
+
     </div>
 
 </section>
 
-<section class="painel formulario-painel">
+
+<section class="painel">
 
     <div class="painel-header">
+
         <div>
             <h2>Adicionar equipamento</h2>
-            <p>Informe o patrimônio do item colocado na caçamba.</p>
+
+            <p>
+                Informe os dados do equipamento que será descartado.
+            </p>
         </div>
+
     </div>
 
+
     <form
-        class="formulario-item"
         method="POST"
         action="/cacambas.php?acao=adicionar"
     >
+
         <input
             type="hidden"
             name="cacamba_id"
             value="<?= (int) $cacamba['id'] ?>"
         >
 
-        <div class="campo-formulario">
-            <label for="patrimonio">Patrimônio</label>
+        <div class="formulario-item">
 
-            <input
-                type="text"
-                id="patrimonio"
-                name="patrimonio"
-                maxlength="100"
-                required
-                autofocus
-                autocomplete="off"
-                placeholder="Digite ou leia o patrimônio"
-            >
+            <div>
+
+                <label for="patrimonio">
+                    Patrimônio
+                </label>
+
+                <input
+                    type="text"
+                    id="patrimonio"
+                    name="patrimonio"
+                    required
+                    autofocus
+                    maxlength="100"
+                >
+
+            </div>
+
+
+            <div>
+
+                <label for="tipo">
+                    Tipo
+                </label>
+
+                <select
+                    id="tipo"
+                    name="tipo"
+                    required
+                >
+
+                    <option value="">
+                        Selecione
+                    </option>
+
+                    <option value="Monitor">
+                        Monitor
+                    </option>
+
+                    <option value="Computador">
+                        Computador
+                    </option>
+
+                    <option value="Notebook">
+                        Notebook
+                    </option>
+
+                    <option value="Tablet">
+                        Tablet
+                    </option>
+
+                    <option value="Impressora">
+                        Impressora
+                    </option>
+
+                    <option value="Celular">
+                        Celular
+                    </option>
+
+                    <option value="Coletor">
+                        Coletor
+                    </option>
+
+                    <option value="Outro">
+                        Outro
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div>
+
+                <label for="descricao">
+                    Descrição
+                </label>
+
+                <input
+                    type="text"
+                    id="descricao"
+                    name="descricao"
+                    maxlength="255"
+                    placeholder="Ex.: Dell 22 polegadas"
+                >
+
+            </div>
+
+
+            <div>
+
+                <button
+                    type="submit"
+                    class="botao botao-primario"
+                >
+                    Adicionar
+                </button>
+
+            </div>
+
         </div>
 
-        <div class="campo-formulario campo-descricao">
-            <label for="descricao">Descrição opcional</label>
-
-            <input
-                type="text"
-                id="descricao"
-                name="descricao"
-                maxlength="255"
-                placeholder="Ex.: Monitor Dell 24 polegadas"
-            >
-        </div>
-
-        <button class="botao botao-primario" type="submit">
-            Adicionar
-        </button>
     </form>
 
 </section>
 
+
 <section class="painel">
 
     <div class="painel-header">
+
         <div>
-            <h2>Itens na caçamba</h2>
+
+            <h2>
+                Equipamentos na caçamba
+            </h2>
 
             <p>
-                Os itens podem ser removidos enquanto o lote estiver aberto.
+                <?= count($itens) ?> item(ns) aguardando descarte.
             </p>
+
         </div>
+
     </div>
+
 
     <?php if ($itens): ?>
 
         <div class="tabela-container">
+
             <table class="tabela">
+
                 <thead>
+
                     <tr>
                         <th>Patrimônio</th>
+                        <th>Tipo</th>
                         <th>Descrição</th>
                         <th>Adicionado por</th>
                         <th>Data</th>
-                        <th class="coluna-acoes">Ações</th>
+                        <th>Ações</th>
                     </tr>
+
                 </thead>
 
                 <tbody>
+
                     <?php foreach ($itens as $item): ?>
+
                         <tr>
+
                             <td>
+
                                 <strong>
-                                    <?= htmlspecialchars($item['patrimonio']) ?>
+                                    <?= htmlspecialchars(
+                                        $item['patrimonio']
+                                    ) ?>
                                 </strong>
+
                             </td>
 
                             <td>
                                 <?= htmlspecialchars(
-                                    $item['descricao'] ?: 'Não informada'
+                                    $item['tipo'] ?: '-'
                                 ) ?>
                             </td>
 
                             <td>
-                                <?= htmlspecialchars($item['adicionado_por']) ?>
+                                <?= htmlspecialchars(
+                                    $item['descricao'] ?: '-'
+                                ) ?>
                             </td>
 
                             <td>
+                                <?= htmlspecialchars(
+                                    $item['adicionado_por']
+                                    ?? 'Não informado'
+                                ) ?>
+                            </td>
+
+                            <td>
+
                                 <?= date(
                                     'd/m/Y H:i',
                                     strtotime($item['data_adicao'])
                                 ) ?>
+
                             </td>
 
-                            <td class="coluna-acoes">
+                            <td>
+
                                 <form
                                     method="POST"
                                     action="/cacambas.php?acao=remover"
-                                    onsubmit="
-                                        return confirm(
-                                            'Remover este item da caçamba?'
-                                        );
-                                    "
                                 >
+
                                     <input
                                         type="hidden"
                                         name="item_id"
@@ -166,59 +297,75 @@ $numeroFormatado = str_pad(
                                     >
 
                                     <button
-                                        class="botao-remover"
                                         type="submit"
+                                        class="botao botao-perigo"
+                                        onclick="return confirm('Remover este equipamento da caçamba?')"
                                     >
                                         Remover
                                     </button>
+
                                 </form>
+
                             </td>
+
                         </tr>
+
                     <?php endforeach; ?>
+
                 </tbody>
+
             </table>
+
         </div>
 
     <?php else: ?>
 
         <div class="estado-vazio">
-            Nenhum equipamento foi adicionado à caçamba atual.
+            Nenhum equipamento foi adicionado nesta caçamba.
         </div>
 
     <?php endif; ?>
 
 </section>
 
-<section class="painel finalizar-painel">
+
+<section class="painel">
 
     <div class="painel-header">
+
         <div>
-            <h2>Finalizar caçamba</h2>
+
+            <h2>
+                Finalizar caçamba
+            </h2>
 
             <p>
-                Após a finalização, os registros não poderão ser alterados.
+                Após a finalização, os itens não poderão mais ser alterados.
             </p>
+
         </div>
+
     </div>
 
+
     <form
-        class="formulario-finalizacao"
         method="POST"
         action="/cacambas.php?acao=finalizar"
-        onsubmit="
-            return confirm(
-                'Confirma a finalização definitiva desta caçamba?'
-            );
-        "
+        class="formulario-finalizacao"
     >
+
         <input
             type="hidden"
             name="cacamba_id"
             value="<?= (int) $cacamba['id'] ?>"
         >
 
-        <div class="campo-formulario">
-            <label for="data_descarte">Data do descarte</label>
+
+        <div>
+
+            <label for="data_descarte">
+                Data do descarte
+            </label>
 
             <input
                 type="date"
@@ -227,10 +374,15 @@ $numeroFormatado = str_pad(
                 value="<?= date('Y-m-d') ?>"
                 required
             >
+
         </div>
 
-        <div class="campo-formulario">
-            <label for="numero_laudo">Laudo ou comprovante</label>
+
+        <div>
+
+            <label for="numero_laudo">
+                Laudo / comprovante
+            </label>
 
             <input
                 type="text"
@@ -238,19 +390,27 @@ $numeroFormatado = str_pad(
                 name="numero_laudo"
                 maxlength="100"
             >
+
         </div>
 
-        <div class="campo-formulario campo-largo">
-            <label for="observacoes">Observações</label>
+
+        <div>
+
+            <label for="observacoes">
+                Observações
+            </label>
 
             <textarea
                 id="observacoes"
                 name="observacoes"
                 rows="3"
             ></textarea>
+
         </div>
 
-        <label class="confirmacao-finalizacao">
+
+        <label>
+
             <input
                 type="checkbox"
                 name="confirmacao"
@@ -258,17 +418,23 @@ $numeroFormatado = str_pad(
                 required
             >
 
-            Confirmo que os itens foram descartados e que este lote deve ser
-            bloqueado definitivamente.
+            Confirmo que os equipamentos desta caçamba foram descartados.
+
         </label>
 
-        <button
-            class="botao botao-perigo"
-            type="submit"
-            <?= !$itens ? 'disabled' : '' ?>
-        >
-            Finalizar caçamba <?= $numeroFormatado ?>
-        </button>
+
+        <div>
+
+            <button
+                type="submit"
+                class="botao botao-perigo"
+                <?= !$itens ? 'disabled' : '' ?>
+            >
+                Finalizar caçamba
+            </button>
+
+        </div>
+
     </form>
 
 </section>

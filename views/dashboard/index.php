@@ -10,17 +10,18 @@
 
 <section class="dashboard-grid">
 
-    <!-- CAÇAMBA ATUAL -->
     <article class="dashboard-card destaque">
 
         <div class="card-header">
 
             <div>
+
                 <span class="card-label">
                     Caçamba atual
                 </span>
 
                 <h2>
+
                     <?php if ($cacambaAtual): ?>
 
                         Caçamba <?= str_pad(
@@ -35,8 +36,11 @@
                         Nenhuma caçamba aberta
 
                     <?php endif; ?>
+
                 </h2>
+
             </div>
+
 
             <?php if ($cacambaAtual): ?>
 
@@ -48,11 +52,13 @@
 
         </div>
 
+
         <?php if ($cacambaAtual): ?>
 
             <div class="cacamba-resumo">
 
                 <div>
+
                     <strong>
                         <?= (int) $cacambaAtual['total_itens'] ?>
                     </strong>
@@ -60,9 +66,11 @@
                     <span>
                         itens na caçamba
                     </span>
+
                 </div>
 
                 <div>
+
                     <strong>
                         <?= date(
                             'd/m/Y',
@@ -73,9 +81,11 @@
                     <span>
                         data de abertura
                     </span>
+
                 </div>
 
             </div>
+
 
             <a
                 class="botao botao-primario"
@@ -95,7 +105,6 @@
     </article>
 
 
-    <!-- TOTAL DE EQUIPAMENTOS DESCARTADOS -->
     <article class="dashboard-card">
 
         <span class="card-label">
@@ -113,7 +122,6 @@
     </article>
 
 
-    <!-- TOTAL DE CAÇAMBAS -->
     <article class="dashboard-card">
 
         <span class="card-label">
@@ -131,7 +139,6 @@
     </article>
 
 
-    <!-- ÚLTIMO DESCARTE -->
     <article class="dashboard-card">
 
         <span class="card-label">
@@ -158,7 +165,10 @@
                     strtotime($ultimaCacamba['data_descarte'])
                 ) ?>
 
-                · <?= (int) $ultimaCacamba['total_itens'] ?> itens
+                ·
+
+                <?= (int) $ultimaCacamba['total_itens'] ?>
+                itens
 
             </span>
 
@@ -179,12 +189,12 @@
 </section>
 
 
-<!-- ÚLTIMOS ITENS -->
 <section class="painel">
 
     <div class="painel-header">
 
         <div>
+
             <h2>
                 Últimos itens adicionados
             </h2>
@@ -192,6 +202,7 @@
             <p>
                 Equipamentos registrados nas caçambas mais recentes.
             </p>
+
         </div>
 
     </div>
@@ -207,6 +218,7 @@
 
                     <tr>
                         <th>Patrimônio</th>
+                        <th>Tipo</th>
                         <th>Descrição</th>
                         <th>Caçamba</th>
                         <th>Adicionado em</th>
@@ -221,12 +233,21 @@
                         <tr>
 
                             <td>
+
                                 <strong>
                                     <?= htmlspecialchars(
                                         $item['patrimonio']
                                         ?: 'Sem patrimônio'
                                     ) ?>
                                 </strong>
+
+                            </td>
+
+                            <td>
+                                <?= htmlspecialchars(
+                                    $item['tipo']
+                                    ?: 'Não informado'
+                                ) ?>
                             </td>
 
                             <td>

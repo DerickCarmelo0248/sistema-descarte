@@ -22,7 +22,9 @@ class CacambaController
             $cacamba = $this->model->criarProxima($usuarioId);
         }
 
-        $itens = $this->model->listarItens((int) $cacamba['id']);
+        $itens = $this->model->listarItens(
+            (int) $cacamba['id']
+        );
 
         return [
             'cacamba' => $cacamba,
@@ -32,143 +34,260 @@ class CacambaController
 
     public function adicionar(): void
     {
-        $this->validarPost();
-
-        $cacambaId = (int) ($_POST['cacamba_id'] ?? 0);
-        $patrimonio = trim($_POST['patrimonio'] ?? '');
-        $descricao = trim($_POST['descricao'] ?? '');
-        $usuarioId = (int) $_SESSION['usuario']['id'];
-
-        if ($cacambaId <= 0 || $patrimonio === '') {
-            $this->redirecionarComMensagem(
-                'erro',
-                'Informe um patrimônio válido.'
-            );
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirecionar();
         }
 
-        if (mb_strlen($patrimonio) > 100) {
-            $this->redirecionarComMensagem(
+        $cacambaId = (int) ($_POST['cacamba_id'] ?? 0);
+
+        $patrimonio = trim(
+            $_POST['patrimonio'] ?? ''
+        );
+
+        $tipo = trim(
+            $_POST['tipo'] ?? ''
+        );
+
+        $descricao = trim(
+            $_POST['descricao'] ?? ''
+        );
+
+        $usuarioId = (int) $_SESSION['usuario']['id'];
+
+        if ($cacambaId <= 0) {
+            $this->mensagem(
                 'erro',
-                'O patrimônio deve ter no máximo 100 caracteres.'
+                'Caçamba inválida.'
             );
+
+            $this->redirecionar();
+        }
+
+        if ($patrimonio === '') {
+            $this->mensagem(
+                'erro',
+                'Informe o patrimônio.'
+            );
+
+            $this->redirecionar();
+        }
+
+        if (strlen($patrimonio) > 100) {
+            $this->mensagem(
+                'erro',
+                'O patrimônio é muito longo.'
+            );
+
+            $this->redirecionar();
+        }
+
+        if ($tipo === '') {
+            $this->mensagem(
+                'erro',
+                'Informe o tipo do equipamento.'
+            );
+
+            $this->redirecionar();
+        }
+
+        if (strlen($tipo) > 100) {
+            $this->mensagem(
+                'erro',
+                'O tipo do equipamento é muito longo.'
+            );
+
+            $this->redirecionar();
+        }
+
+        if (strlen($descricao) > 255) {
+            $this->mensagem(
+                'erro',
+                'A descrição é muito longa.'
+            );
+
+            $this->redirecionar();
         }
 
         try {
+
             $this->model->adicionarItem(
                 $cacambaId,
                 $patrimonio,
-                $descricao,
+                $tipo,
+                $descricao ?: null,
                 $usuarioId
             );
 
-            $this->redirecionarComMensagem(
+            $this->mensagem(
                 'sucesso',
-                'Equipamento adicionado à caçamba.'
+                'Equipamento adicionado com sucesso.'
             );
+
         } catch (PDOException $erro) {
+
             if ($erro->getCode() === '23505') {
-                $this->redirecionarComMensagem(
+
+                $this->mensagem(
                     'erro',
-                    'Este patrimônio já está nesta caçamba.'
+                    'Este patrimônio já está registrado nesta caçamba.'
+                );
+
+            } else {
+
+                $this->mensagem(
+                    'erro',
+                    'Erro ao adicionar equipamento.'
                 );
             }
 
-            throw $erro;
         } catch (Throwable $erro) {
-            $this->redirecionarComMensagem(
+
+            $this->mensagem(
                 'erro',
                 $erro->getMessage()
             );
         }
+
+        $this->redirecionar();
     }
 
     public function remover(): void
     {
-        $this->validarPost();
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirecionar();
+        }
 
         $itemId = (int) ($_POST['item_id'] ?? 0);
         $cacambaId = (int) ($_POST['cacamba_id'] ?? 0);
 
+        if ($itemId <= 0 || $cacambaId <= 0) {
+
+            $this->mensagem(
+                'erro',
+                'Registro inválido.'
+            );
+
+            $this->redirecionar();
+        }
+
         try {
-            $removido = $this->model->removerItem(
+
+            $this->model->removerItem(
                 $itemId,
                 $cacambaId
             );
 
-            $this->redirecionarComMensagem(
-                $removido ? 'sucesso' : 'erro',
-                $removido
-                    ? 'Item removido da caçamba.'
-                    : 'O item não pôde ser removido.'
+            $this->mensagem(
+                'sucesso',
+                'Equipamento removido da caçamba.'
             );
+
         } catch (Throwable $erro) {
-            $this->redirecionarComMensagem(
+
+            $this->mensagem(
                 'erro',
                 $erro->getMessage()
             );
         }
+
+        $this->redirecionar();
     }
 
     public function finalizar(): void
     {
-        $this->validarPost();
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirecionar();
+        }
 
         $cacambaId = (int) ($_POST['cacamba_id'] ?? 0);
-        $dataDescarte = $_POST['data_descarte'] ?? '';
-        $numeroLaudo = trim($_POST['numero_laudo'] ?? '');
-        $observacoes = trim($_POST['observacoes'] ?? '');
-        $confirmacao = $_POST['confirmacao'] ?? '';
+
+        $dataDescarte = trim(
+            $_POST['data_descarte'] ?? ''
+        );
+
+        $numeroLaudo = trim(
+            $_POST['numero_laudo'] ?? ''
+        );
+
+        $observacoes = trim(
+            $_POST['observacoes'] ?? ''
+        );
+
+        $confirmacao = isset(
+            $_POST['confirmacao']
+        );
+
         $usuarioId = (int) $_SESSION['usuario']['id'];
 
-        if (
-            $cacambaId <= 0 ||
-            $dataDescarte === '' ||
-            $confirmacao !== '1'
-        ) {
-            $this->redirecionarComMensagem(
+        if ($cacambaId <= 0) {
+
+            $this->mensagem(
                 'erro',
-                'Confirme os dados antes de finalizar.'
+                'Caçamba inválida.'
             );
+
+            $this->redirecionar();
+        }
+
+        if ($dataDescarte === '') {
+
+            $this->mensagem(
+                'erro',
+                'Informe a data do descarte.'
+            );
+
+            $this->redirecionar();
+        }
+
+        if (!$confirmacao) {
+
+            $this->mensagem(
+                'erro',
+                'Confirme a finalização da caçamba.'
+            );
+
+            $this->redirecionar();
         }
 
         try {
+
             $this->model->finalizar(
                 $cacambaId,
                 $dataDescarte,
-                $numeroLaudo,
-                $observacoes,
+                $numeroLaudo ?: null,
+                $observacoes ?: null,
                 $usuarioId
             );
 
-            $this->redirecionarComMensagem(
+            $this->mensagem(
                 'sucesso',
-                'Caçamba finalizada e novo lote iniciado.'
+                'Caçamba finalizada. Uma nova caçamba foi criada.'
             );
+
         } catch (Throwable $erro) {
-            $this->redirecionarComMensagem(
+
+            $this->mensagem(
                 'erro',
                 $erro->getMessage()
             );
         }
+
+        $this->redirecionar();
     }
 
-    private function validarPost(): void
-    {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: /cacambas.php');
-            exit;
-        }
-    }
-
-    private function redirecionarComMensagem(
+    private function mensagem(
         string $tipo,
-        string $mensagem
-    ): never {
+        string $texto
+    ): void {
+
         $_SESSION['mensagem'] = [
             'tipo' => $tipo,
-            'texto' => $mensagem
+            'texto' => $texto
         ];
+    }
 
+    private function redirecionar(): never
+    {
         header('Location: /cacambas.php');
         exit;
     }

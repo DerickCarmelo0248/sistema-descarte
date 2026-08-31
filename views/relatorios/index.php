@@ -113,6 +113,17 @@
                     Gerar PDF
                 </a>
 
+                <a
+                    href="/exportar-relatorio-resumido-pdf.php?<?= http_build_query([
+                        'data_inicio' => $dataInicio,
+                        'data_fim' => $dataFim,
+                        'cacamba' => $cacambaNumero
+                    ]) ?>"
+                    class="botao"
+                >
+                    PDF resumido
+                </a>
+
             </div>
 
         </div>

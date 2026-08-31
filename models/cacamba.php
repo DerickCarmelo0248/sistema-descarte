@@ -23,14 +23,20 @@ class Cacamba
                 c.observacoes,
                 COUNT(ci.id) AS total_itens
             FROM cacambas c
+
             LEFT JOIN cacamba_itens ci
                 ON ci.cacamba_id = c.id
+
             WHERE c.status = 'aberta'
+
             GROUP BY c.id
+
             LIMIT 1
         ";
 
-        return $this->pdo->query($sql)->fetch();
+        return $this->pdo
+            ->query($sql)
+            ->fetch();
     }
 
     public function criarProxima(int $usuarioId): array
@@ -38,15 +44,18 @@ class Cacamba
         $this->pdo->beginTransaction();
 
         try {
-            $aberta = $this->buscarAtual();
 
-            if ($aberta) {
+            $atual = $this->buscarAtual();
+
+            if ($atual) {
                 $this->pdo->commit();
-                return $aberta;
+
+                return $atual;
             }
 
             $sqlNumero = "
-                SELECT COALESCE(MAX(numero), 0) + 1
+                SELECT
+                    COALESCE(MAX(numero), 0) + 1
                 FROM cacambas
             ";
 
@@ -65,11 +74,7 @@ class Cacamba
                     'aberta',
                     :criada_por
                 )
-                RETURNING
-                    id,
-                    numero,
-                    status,
-                    data_abertura
+                RETURNING *
             ";
 
             $stmt = $this->pdo->prepare($sql);
@@ -84,8 +89,13 @@ class Cacamba
             $this->pdo->commit();
 
             return $cacamba;
+
         } catch (Throwable $erro) {
-            $this->pdo->rollBack();
+
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+
             throw $erro;
         }
     }
@@ -96,14 +106,19 @@ class Cacamba
             SELECT
                 ci.id,
                 ci.patrimonio,
+                ci.tipo,
                 ci.descricao,
                 ci.data_adicao,
                 u.nome AS adicionado_por
+
             FROM cacamba_itens ci
+
             INNER JOIN usuarios u
                 ON u.id = ci.adicionado_por
+
             WHERE ci.cacamba_id = :cacamba_id
-            ORDER BY ci.data_adicao DESC, ci.id DESC
+
+            ORDER BY ci.data_adicao DESC
         ";
 
         $stmt = $this->pdo->prepare($sql);
@@ -118,21 +133,36 @@ class Cacamba
     public function adicionarItem(
         int $cacambaId,
         string $patrimonio,
+        string $tipo,
         ?string $descricao,
         int $usuarioId
     ): void {
-        $sqlStatus = "
+
+        $sqlCacamba = "
             SELECT status
             FROM cacambas
             WHERE id = :id
         ";
 
-        $stmtStatus = $this->pdo->prepare($sqlStatus);
-        $stmtStatus->execute([':id' => $cacambaId]);
+        $stmtCacamba = $this->pdo->prepare(
+            $sqlCacamba
+        );
 
-        if ($stmtStatus->fetchColumn() !== 'aberta') {
+        $stmtCacamba->execute([
+            ':id' => $cacambaId
+        ]);
+
+        $status = $stmtCacamba->fetchColumn();
+
+        if (!$status) {
             throw new RuntimeException(
-                'Não é possível adicionar itens a uma caçamba finalizada.'
+                'Caçamba não encontrada.'
+            );
+        }
+
+        if ($status !== 'aberta') {
+            throw new RuntimeException(
+                'Não é possível adicionar itens em uma caçamba finalizada.'
             );
         }
 
@@ -140,12 +170,14 @@ class Cacamba
             INSERT INTO cacamba_itens (
                 cacamba_id,
                 patrimonio,
+                tipo,
                 descricao,
                 adicionado_por
             )
             VALUES (
                 :cacamba_id,
                 :patrimonio,
+                :tipo,
                 :descricao,
                 :adicionado_por
             )
@@ -156,33 +188,41 @@ class Cacamba
         $stmt->execute([
             ':cacamba_id' => $cacambaId,
             ':patrimonio' => $patrimonio,
-            ':descricao' => $descricao ?: null,
+            ':tipo' => $tipo,
+            ':descricao' => $descricao,
             ':adicionado_por' => $usuarioId
         ]);
     }
 
-    public function removerItem(int $itemId, int $cacambaId): bool
-    {
+    public function removerItem(
+        int $itemId,
+        int $cacambaId
+    ): void {
+
         $sql = "
             DELETE FROM cacamba_itens
-            WHERE id = :id
+            WHERE id = :item_id
               AND cacamba_id = :cacamba_id
               AND EXISTS (
-                  SELECT 1
-                  FROM cacambas
-                  WHERE id = :cacamba_id
-                    AND status = 'aberta'
+                    SELECT 1
+                    FROM cacambas c
+                    WHERE c.id = :cacamba_id
+                      AND c.status = 'aberta'
               )
         ";
 
         $stmt = $this->pdo->prepare($sql);
 
         $stmt->execute([
-            ':id' => $itemId,
+            ':item_id' => $itemId,
             ':cacamba_id' => $cacambaId
         ]);
 
-        return $stmt->rowCount() > 0;
+        if ($stmt->rowCount() === 0) {
+            throw new RuntimeException(
+                'O item não pôde ser removido.'
+            );
+        }
     }
 
     public function finalizar(
@@ -192,10 +232,12 @@ class Cacamba
         ?string $observacoes,
         int $usuarioId
     ): void {
+
         $this->pdo->beginTransaction();
 
         try {
-           $sqlBloqueio = "
+
+            $sqlBloqueio = "
                 SELECT
                     c.id,
                     c.status,
@@ -204,18 +246,28 @@ class Cacamba
                         FROM cacamba_itens ci
                         WHERE ci.cacamba_id = c.id
                     ) AS total_itens
+
                 FROM cacambas c
+
                 WHERE c.id = :id
+
                 FOR UPDATE
             ";
 
-            $stmtBloqueio = $this->pdo->prepare($sqlBloqueio);
-            $stmtBloqueio->execute([':id' => $cacambaId]);
+            $stmtBloqueio = $this->pdo->prepare(
+                $sqlBloqueio
+            );
+
+            $stmtBloqueio->execute([
+                ':id' => $cacambaId
+            ]);
 
             $cacamba = $stmtBloqueio->fetch();
 
             if (!$cacamba) {
-                throw new RuntimeException('Caçamba não encontrada.');
+                throw new RuntimeException(
+                    'Caçamba não encontrada.'
+                );
             }
 
             if ($cacamba['status'] !== 'aberta') {
@@ -232,6 +284,7 @@ class Cacamba
 
             $sqlFinalizar = "
                 UPDATE cacambas
+
                 SET
                     status = 'descartada',
                     data_descarte = :data_descarte,
@@ -239,22 +292,26 @@ class Cacamba
                     observacoes = :observacoes,
                     finalizada_por = :finalizada_por,
                     updated_at = CURRENT_TIMESTAMP
+
                 WHERE id = :id
                   AND status = 'aberta'
             ";
 
-            $stmtFinalizar = $this->pdo->prepare($sqlFinalizar);
+            $stmtFinalizar = $this->pdo->prepare(
+                $sqlFinalizar
+            );
 
             $stmtFinalizar->execute([
                 ':data_descarte' => $dataDescarte,
-                ':numero_laudo' => $numeroLaudo ?: null,
-                ':observacoes' => $observacoes ?: null,
+                ':numero_laudo' => $numeroLaudo,
+                ':observacoes' => $observacoes,
                 ':finalizada_por' => $usuarioId,
                 ':id' => $cacambaId
             ]);
 
             $sqlNumero = "
-                SELECT COALESCE(MAX(numero), 0) + 1
+                SELECT
+                    COALESCE(MAX(numero), 0) + 1
                 FROM cacambas
             ";
 
@@ -275,7 +332,9 @@ class Cacamba
                 )
             ";
 
-            $stmtNova = $this->pdo->prepare($sqlNova);
+            $stmtNova = $this->pdo->prepare(
+                $sqlNova
+            );
 
             $stmtNova->execute([
                 ':numero' => $proximoNumero,
@@ -283,8 +342,13 @@ class Cacamba
             ]);
 
             $this->pdo->commit();
+
         } catch (Throwable $erro) {
-            $this->pdo->rollBack();
+
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+
             throw $erro;
         }
     }
@@ -295,43 +359,63 @@ class Cacamba
             SELECT
                 c.id,
                 c.numero,
-                c.data_abertura,
                 c.data_descarte,
                 c.numero_laudo,
                 c.observacoes,
                 COUNT(ci.id) AS total_itens,
                 u.nome AS finalizada_por
+
             FROM cacambas c
+
             LEFT JOIN cacamba_itens ci
                 ON ci.cacamba_id = c.id
+
             LEFT JOIN usuarios u
                 ON u.id = c.finalizada_por
+
             WHERE c.status = 'descartada'
-            GROUP BY c.id, u.nome
-            ORDER BY c.data_descarte DESC, c.numero DESC
+
+            GROUP BY
+                c.id,
+                u.nome
+
+            ORDER BY
+                c.data_descarte DESC,
+                c.numero DESC
         ";
 
-        return $this->pdo->query($sql)->fetchAll();
+        return $this->pdo
+            ->query($sql)
+            ->fetchAll();
     }
 
-    public function buscarFinalizadaPorId(int $id): array|false
-    {
+    public function buscarFinalizadaPorId(
+        int $id
+    ): array|false {
+
         $sql = "
             SELECT
                 c.*,
                 criador.nome AS criada_por_nome,
                 finalizador.nome AS finalizada_por_nome
+
             FROM cacambas c
+
             INNER JOIN usuarios criador
                 ON criador.id = c.criada_por
+
             LEFT JOIN usuarios finalizador
                 ON finalizador.id = c.finalizada_por
+
             WHERE c.id = :id
               AND c.status = 'descartada'
         ";
 
         $stmt = $this->pdo->prepare($sql);
-        $stmt->execute([':id' => $id]);
+
+        $stmt->execute([
+            ':id' => $id
+        ]);
 
         return $stmt->fetch();
     }
