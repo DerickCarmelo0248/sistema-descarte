@@ -94,27 +94,22 @@ class DashboardController
     }
 
     private function buscarUltimosItens(): array
-    {
-        $sql = "
-            SELECT
-                e.patrimonio,
-                COALESCE(m.nome, 'Modelo não informado') AS modelo,
-                COALESCE(f.nome, 'Fabricante não informado') AS fabricante,
-                ci.data_adicao,
-                c.numero AS numero_cacamba
-            FROM cacamba_itens ci
-            INNER JOIN cacambas c
-                ON c.id = ci.cacamba_id
-            INNER JOIN equipamentos e
-                ON e.id = ci.equipamento_id
-            LEFT JOIN modelos m
-                ON m.id = e.modelo_id
-            LEFT JOIN fabricantes f
-                ON f.id = e.fabricante_id
-            ORDER BY ci.data_adicao DESC
-            LIMIT 8
-        ";
+{
+    $sql = "
+        SELECT
+            ci.patrimonio,
+            ci.descricao,
+            ci.data_adicao,
+            c.numero AS cacamba_numero
+        FROM cacamba_itens ci
+        INNER JOIN cacambas c
+            ON c.id = ci.cacamba_id
+        ORDER BY ci.data_adicao DESC
+        LIMIT 5
+    ";
 
-        return $this->pdo->query($sql)->fetchAll();
-    }
+    $stmt = $this->pdo->query($sql);
+
+    return $stmt->fetchAll();
+}
 }
