@@ -76,6 +76,7 @@
             </div>
 
             <div>
+
                 <button
                     type="submit"
                     class="botao botao-primario"
@@ -99,6 +100,17 @@
                     class="botao"
                 >
                     Exportar CSV
+                </a>
+
+                <a
+                    href="/exportar-relatorio-pdf.php?<?= http_build_query([
+                        'data_inicio' => $dataInicio,
+                        'data_fim' => $dataFim,
+                        'cacamba' => $cacambaNumero
+                    ]) ?>"
+                    class="botao"
+                >
+                    Gerar PDF
                 </a>
 
             </div>
