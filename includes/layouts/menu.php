@@ -17,7 +17,7 @@
             Caçamba atual
         </a>
 
-        <a href="/views/relatorios/index.php">
+        <a href="/relatorios.php">
             Relatórios
         </a>
 
